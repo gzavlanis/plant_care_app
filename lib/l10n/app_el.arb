@@ -1,0 +1,58 @@
+{
+  "@@locale": "el",
+  "appTitle": "Plant Tracker",
+  "myPlants": "Τα Φυτά μου",
+  "searchHint": "Αναζήτηση με όνομα ή είδος...",
+  "filterAll": "Όλα",
+  "filterThirsty": "Διψασμένα 💧",
+  "filterOk": "Εντάξει 🌿",
+  "noPlantsFound": "Δεν βρέθηκαν φυτά.",
+  "newPlant": "Νέο Φυτό",
+  "editPlant": "Επεξεργασία Φυτού",
+  "addPlant": "Προσθήκη Φυτού",
+  "savePlant": "Αποθήκευση Φυτού",
+  "updatePlant": "Ενημέρωση Φυτού",
+  "deletePlant": "Διαγραφή Φυτού",
+  "confirmDelete": "Θέλεις σίγουρα να διαγράψεις το φυτό \"{name}\";",
+  "@confirmDelete": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "cancel": "Άκυρο",
+  "delete": "Διαγραφή",
+  "water": "Πότισμα",
+  "undo": "ΑΝΑΙΡΕΣΗ",
+  "plantWatered": "Το φυτό \"{name}\" ποτίστηκε! 💧",
+  "@plantWatered": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "needsWater": "Χρειάζεται πότισμα!",
+  "nextWateringIn": "Επόμενο σε {days} μέρες",
+  "@nextWateringIn": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "navPlants": "Φυτά",
+  "navStats": "Στατιστικά",
+  "sortNeedsWater": "Πιο διψασμένα πρώτα",
+  "sortName": "Αλφαβητικά (Α-Ω)",
+  "sortRecent": "Πρόσφατα ποτισμένα",
+  "statsTitle": "Στατιστικά Φροντίδας",
+  "statsTotal": "Σύνολο",
+  "statsThirsty": "Διψασμένα",
+  "statsAvgInterval": "Μ.Ο. Συχνότητας",
+  "hydrationState": "Κατάσταση Ενυδάτωσης",
+  "plantsByLocation": "Φυτά ανά Χώρο",
+  "locBalconySouth": "Νότιο Μπαλκόνι",
+  "locBalconyNorth": "Βόρειο Μπαλκόνι",
+  "locLivingRoom": "Σαλόνι",
+  "locOffice": "Γραφείο",
+  "locBedroom": "Υπνοδωμάτιο",
+  "locGarden": "Κήπος",
+  "plantHelichrysum": "Ελίχρυσος",
+  "plantBlackPine": "Μαύρη Πεύκη"
+}

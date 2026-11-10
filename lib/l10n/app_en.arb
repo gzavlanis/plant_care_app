@@ -1,0 +1,58 @@
+{
+  "@@locale": "en",
+  "appTitle": "Plant Tracker",
+  "myPlants": "My Plants",
+  "searchHint": "Search by name or species...",
+  "filterAll": "All",
+  "filterThirsty": "Thirsty 💧",
+  "filterOk": "Healthy 🌿",
+  "noPlantsFound": "No plants found.",
+  "newPlant": "New Plant",
+  "editPlant": "Edit Plant",
+  "addPlant": "Add Plant",
+  "savePlant": "Save Plant",
+  "updatePlant": "Update Plant",
+  "deletePlant": "Delete Plant",
+  "confirmDelete": "Are you sure you want to delete \"{name}\"?",
+  "@confirmDelete": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "water": "Water",
+  "undo": "UNDO",
+  "plantWatered": "Plant \"{name}\" was watered! 💧",
+  "@plantWatered": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "needsWater": "Needs water!",
+  "nextWateringIn": "Next watering in {days} days",
+  "@nextWateringIn": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "navPlants": "Plants",
+  "navStats": "Statistics",
+  "sortNeedsWater": "Most thirsty first",
+  "sortName": "Alphabetical (A-Z)",
+  "sortRecent": "Recently watered",
+  "statsTitle": "Care Statistics",
+  "statsTotal": "Total",
+  "statsThirsty": "Thirsty",
+  "statsAvgInterval": "Avg Interval",
+  "hydrationState": "Hydration State",
+  "plantsByLocation": "Plants by Location",
+  "locBalconySouth": "South Balcony",
+  "locBalconyNorth": "North Balcony",
+  "locLivingRoom": "Living Room",
+  "locOffice": "Office",
+  "locBedroom": "Bedroom",
+  "locGarden": "Garden",
+  "plantHelichrysum": "Curry Plant",
+  "plantBlackPine": "Black Pine"
+}

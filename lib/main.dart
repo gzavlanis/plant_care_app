@@ -2,17 +2,28 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'l10n/generated/app_localizations.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'controllers/plant_controller.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'models/plant.dart';
+import 'screens/calendar_screen.dart';
 import 'screens/plant_detail_screen.dart';
 import 'screens/stats_screen.dart';
 import 'services/notification_service.dart';
 import 'widgets/add_plant_sheet.dart';
+
+// Provider για την επιλογή προβολής (false = Λίστα, true = Πλέγμα Καρτών)
+class PlantGridViewNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
+final plantGridViewProvider = NotifierProvider<PlantGridViewNotifier, bool>(
+  PlantGridViewNotifier.new,
+);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,7 +79,11 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [PlantListScreen(), StatsScreen()];
+  final List<Widget> _screens = const [
+    PlantListScreen(),
+    CalendarScreen(),
+    StatsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +103,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             icon: const Icon(Icons.yard_outlined),
             selectedIcon: const Icon(Icons.yard),
             label: l10n.navPlants,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.calendar_month_outlined),
+            selectedIcon: const Icon(Icons.calendar_month),
+            label: l10n.navCalendar,
           ),
           NavigationDestination(
             icon: const Icon(Icons.bar_chart_outlined),
@@ -120,12 +140,37 @@ class PlantListScreen extends ConsumerWidget {
     );
   }
 
+  void _waterWithSnackbar(
+    BuildContext context,
+    WidgetRef ref,
+    Plant plant,
+    AppLocalizations l10n,
+  ) {
+    HapticFeedback.mediumImpact();
+    ref.read(plantListProvider.notifier).waterPlant(plant.id);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.plantWatered(plant.name)),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: l10n.undo,
+          textColor: Colors.yellowAccent,
+          onPressed: () {
+            ref.read(plantListProvider.notifier).undoWatering(plant.id);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final plants = ref.watch(filteredPlantsProvider);
     final activeFilter = ref.watch(plantFilterProvider);
     final activeSort = ref.watch(plantSortProvider);
     final currentLocale = ref.watch(localeProvider);
+    final isGridView = ref.watch(plantGridViewProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
@@ -135,28 +180,39 @@ class PlantListScreen extends ConsumerWidget {
           l10n.myPlants,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        centerTitle: true,
+        centerTitle: false,
         actions: [
-          // 1. Κουμπί Εναλλαγής Γλώσσας (EL / EN) - ΜΟΝΟ ΑΥΤΟ
+          // 1. Εναλλαγή Προβολής (Λίστα / Κάρτες Πλέγματος)
+          IconButton(
+            icon: Icon(
+              isGridView ? Icons.view_list_outlined : Icons.grid_view_outlined,
+            ),
+            tooltip: isGridView ? 'Προβολή Λίστας' : 'Προβολή Καρτών',
+            onPressed: () {
+              ref.read(plantGridViewProvider.notifier).toggle();
+            },
+          ),
+
+          // 2. Κουμπί Εναλλαγής Γλώσσας (EL / EN)
           TextButton(
             onPressed: () {
               ref.read(localeProvider.notifier).toggleLocale();
             },
             style: TextButton.styleFrom(
-              minimumSize: const Size(40, 36),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(36, 36),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
             ),
             child: Text(
               currentLocale.languageCode.toUpperCase(),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontSize: 13,
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
 
-          // 2. Κουμπί Εναλλαγής Θέματος (Light / Dark)
+          // 3. Κουμπί Εναλλαγής Θέματος (Light / Dark)
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
@@ -167,7 +223,7 @@ class PlantListScreen extends ConsumerWidget {
             },
           ),
 
-          // 3. Μενού Ταξινόμησης (Sort)
+          // 4. Μενού Ταξινόμησης (Sort)
           PopupMenuButton<PlantSort>(
             icon: const Icon(Icons.sort),
             tooltip: 'Sort',
@@ -226,7 +282,7 @@ class PlantListScreen extends ConsumerWidget {
             ],
           ),
 
-          // 4. Test Notification
+          // 5. Test Notification
           IconButton(
             icon: const Icon(Icons.notifications_active_outlined),
             tooltip: 'Test Notification',
@@ -289,7 +345,7 @@ class PlantListScreen extends ConsumerWidget {
                   label: Text(l10n.filterThirsty),
                   selected: activeFilter == PlantFilter.needsWater,
                   selectedColor: isDark
-                      ? Colors.orange.shade900.withOpacity(0.4)
+                      ? Colors.orange.shade900.withValues(alpha: 0.4)
                       : Colors.orange.shade100,
                   onSelected: (_) {
                     ref
@@ -302,7 +358,7 @@ class PlantListScreen extends ConsumerWidget {
                   label: Text(l10n.filterOk),
                   selected: activeFilter == PlantFilter.ok,
                   selectedColor: isDark
-                      ? Colors.green.shade900.withOpacity(0.4)
+                      ? Colors.green.shade900.withValues(alpha: 0.4)
                       : Colors.green.shade100,
                   onSelected: (_) {
                     ref
@@ -314,7 +370,7 @@ class PlantListScreen extends ConsumerWidget {
             ),
           ),
 
-          // 3. Λίστα Φυτών
+          // 3. Λίστα ή Πλέγμα Φυτών
           Expanded(
             child: plants.isEmpty
                 ? Center(
@@ -337,8 +393,24 @@ class PlantListScreen extends ConsumerWidget {
                       ],
                     ),
                   )
+                : isGridView
+                ? GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.74,
+                        ),
+                    itemCount: plants.length,
+                    itemBuilder: (context, index) {
+                      final plant = plants[index];
+                      return _buildPlantGridCard(context, ref, plant, l10n);
+                    },
+                  )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
                     itemCount: plants.length,
                     itemBuilder: (context, index) {
                       final plant = plants[index];
@@ -356,6 +428,217 @@ class PlantListScreen extends ConsumerWidget {
     );
   }
 
+  /// Κάθετη Κάρτα για το Πλέγμα 2 στηλών (Grid View)
+  Widget _buildPlantGridCard(
+    BuildContext context,
+    WidgetRef ref,
+    Plant plant,
+    AppLocalizations l10n,
+  ) {
+    final needsWater = plant.needsWater;
+    final hasImage =
+        plant.imageUrl != null && File(plant.imageUrl!).existsSync();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final statusColor = needsWater
+        ? (isDark ? Colors.orange.shade300 : Colors.orange.shade800)
+        : (isDark ? Colors.green.shade300 : Colors.green.shade700);
+
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: needsWater
+              ? (isDark ? Colors.orange.shade700 : Colors.orange.shade300)
+              : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+          width: needsWater ? 1.5 : 1.0,
+        ),
+      ),
+      color: Theme.of(context).colorScheme.surface,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (ctx) => PlantDetailScreen(plantId: plant.id),
+            ),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Επάνω τμήμα: Φωτογραφία ή Εικονίδιο + Badge Τοποθεσίας
+            Expanded(
+              flex: 5,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Hero(
+                    tag: 'plant_image_${plant.id}',
+                    child: hasImage
+                        ? Image.file(File(plant.imageUrl!), fit: BoxFit.cover)
+                        : Container(
+                            color: needsWater
+                                ? (isDark
+                                      ? Colors.orange.shade900.withValues(
+                                          alpha: 0.25,
+                                        )
+                                      : Colors.orange.shade50)
+                                : (isDark
+                                      ? Colors.green.shade900.withValues(
+                                          alpha: 0.25,
+                                        )
+                                      : Colors.green.shade50),
+                            child: Center(
+                              child: Icon(
+                                Icons.local_florist,
+                                size: 42,
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                  ),
+                  // Badge χώρου πάνω αριστερά
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (isDark ? Colors.black : Colors.white)
+                            .withValues(alpha: 0.82),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            plant.location.icon,
+                            size: 12,
+                            color: isDark
+                                ? Colors.grey.shade200
+                                : Colors.grey.shade800,
+                          ),
+                          const SizedBox(width: 4),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 85),
+                            child: Text(
+                              plant.location.localizedLabel(context),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.grey.shade200
+                                    : Colors.grey.shade800,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Κάτω τμήμα: Πληροφορίες & Πότισμα
+            Expanded(
+              flex: 6,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      plant.localizedName(context),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      plant.species.isNotEmpty ? plant.species : '—',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: plant.hydrationLevel,
+                        minHeight: 5,
+                        backgroundColor: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          plant.hydrationLevel < 0.25
+                              ? Colors.red.shade400
+                              : plant.hydrationLevel < 0.55
+                              ? Colors.orange.shade400
+                              : Colors.green.shade500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            needsWater
+                                ? l10n.needsWater
+                                : l10n.nextWateringIn(plant.daysUntilWatering),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: IconButton.filledTonal(
+                            padding: EdgeInsets.zero,
+                            iconSize: 18,
+                            onPressed: () =>
+                                _waterWithSnackbar(context, ref, plant, l10n),
+                            icon: const Icon(Icons.water_drop_outlined),
+                            tooltip: l10n.water,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Οριζόντια Κάρτα για την Προβολή Λίστας (List View)
   Widget _buildPlantCard(BuildContext context, WidgetRef ref, Plant plant) {
     final needsWater = plant.needsWater;
     final hasImage =
@@ -415,23 +698,7 @@ class PlantListScreen extends ConsumerWidget {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          HapticFeedback.mediumImpact();
-          ref.read(plantListProvider.notifier).waterPlant(plant.id);
-
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.plantWatered(plant.name)),
-              duration: const Duration(seconds: 4),
-              action: SnackBarAction(
-                label: l10n.undo,
-                textColor: Colors.yellowAccent,
-                onPressed: () {
-                  ref.read(plantListProvider.notifier).undoWatering(plant.id);
-                },
-              ),
-            ),
-          );
+          _waterWithSnackbar(context, ref, plant, l10n);
           return false;
         }
 
@@ -498,10 +765,10 @@ class PlantListScreen extends ConsumerWidget {
                     radius: 28,
                     backgroundColor: needsWater
                         ? (isDark
-                              ? Colors.orange.shade900.withOpacity(0.3)
+                              ? Colors.orange.shade900.withValues(alpha: 0.3)
                               : Colors.orange.shade50)
                         : (isDark
-                              ? Colors.green.shade900.withOpacity(0.3)
+                              ? Colors.green.shade900.withValues(alpha: 0.3)
                               : Colors.green.shade50),
                     backgroundImage: hasImage
                         ? FileImage(File(plant.imageUrl!))
@@ -664,25 +931,8 @@ class PlantListScreen extends ConsumerWidget {
                   ),
                 ),
                 IconButton.filledTonal(
-                  onPressed: () {
-                    ref.read(plantListProvider.notifier).waterPlant(plant.id);
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.plantWatered(plant.name)),
-                        duration: const Duration(seconds: 4),
-                        action: SnackBarAction(
-                          label: l10n.undo,
-                          textColor: Colors.yellowAccent,
-                          onPressed: () {
-                            ref
-                                .read(plantListProvider.notifier)
-                                .undoWatering(plant.id);
-                          },
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: () =>
+                      _waterWithSnackbar(context, ref, plant, l10n),
                   icon: const Icon(Icons.water_drop_outlined),
                   tooltip: l10n.water,
                 ),

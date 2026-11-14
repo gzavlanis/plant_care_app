@@ -337,6 +337,48 @@ abstract class AppLocalizations {
   /// In el, this message translates to:
   /// **'Μαύρη Πεύκη'**
   String get plantBlackPine;
+
+  /// No description provided for @navCalendar.
+  ///
+  /// In el, this message translates to:
+  /// **'Ημερολόγιο'**
+  String get navCalendar;
+
+  /// No description provided for @calendarTitle.
+  ///
+  /// In el, this message translates to:
+  /// **'Ημερολόγιο Ποτίσματος'**
+  String get calendarTitle;
+
+  /// No description provided for @calendarWatered.
+  ///
+  /// In el, this message translates to:
+  /// **'Ποτίστηκε'**
+  String get calendarWatered;
+
+  /// No description provided for @calendarDue.
+  ///
+  /// In el, this message translates to:
+  /// **'Θέλει πότισμα'**
+  String get calendarDue;
+
+  /// No description provided for @calendarUpcoming.
+  ///
+  /// In el, this message translates to:
+  /// **'Προγραμματισμένο'**
+  String get calendarUpcoming;
+
+  /// No description provided for @calendarNoEvents.
+  ///
+  /// In el, this message translates to:
+  /// **'Κανένα πότισμα για αυτή την ημέρα.'**
+  String get calendarNoEvents;
+
+  /// No description provided for @calendarToday.
+  ///
+  /// In el, this message translates to:
+  /// **'Σήμερα'**
+  String get calendarToday;
 }
 
 class _AppLocalizationsDelegate

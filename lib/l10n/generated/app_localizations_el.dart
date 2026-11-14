@@ -134,4 +134,25 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get plantBlackPine => 'Μαύρη Πεύκη';
+
+  @override
+  String get navCalendar => 'Ημερολόγιο';
+
+  @override
+  String get calendarTitle => 'Ημερολόγιο Ποτίσματος';
+
+  @override
+  String get calendarWatered => 'Ποτίστηκε';
+
+  @override
+  String get calendarDue => 'Θέλει πότισμα';
+
+  @override
+  String get calendarUpcoming => 'Προγραμματισμένο';
+
+  @override
+  String get calendarNoEvents => 'Κανένα πότισμα για αυτή την ημέρα.';
+
+  @override
+  String get calendarToday => 'Σήμερα';
 }

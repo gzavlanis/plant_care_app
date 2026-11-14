@@ -134,4 +134,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plantBlackPine => 'Black Pine';
+
+  @override
+  String get navCalendar => 'Calendar';
+
+  @override
+  String get calendarTitle => 'Watering Calendar';
+
+  @override
+  String get calendarWatered => 'Watered';
+
+  @override
+  String get calendarDue => 'Needs water';
+
+  @override
+  String get calendarUpcoming => 'Scheduled';
+
+  @override
+  String get calendarNoEvents => 'No watering events for this day.';
+
+  @override
+  String get calendarToday => 'Today';
 }

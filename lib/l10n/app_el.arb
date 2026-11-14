@@ -54,5 +54,12 @@
   "locBedroom": "Υπνοδωμάτιο",
   "locGarden": "Κήπος",
   "plantHelichrysum": "Ελίχρυσος",
-  "plantBlackPine": "Μαύρη Πεύκη"
+  "plantBlackPine": "Μαύρη Πεύκη",
+  "navCalendar": "Ημερολόγιο",
+  "calendarTitle": "Ημερολόγιο Ποτίσματος",
+  "calendarWatered": "Ποτίστηκε",
+  "calendarDue": "Θέλει πότισμα",
+  "calendarUpcoming": "Προγραμματισμένο",
+  "calendarNoEvents": "Κανένα πότισμα για αυτή την ημέρα.",
+  "calendarToday": "Σήμερα"
 }

@@ -54,5 +54,12 @@
   "locBedroom": "Bedroom",
   "locGarden": "Garden",
   "plantHelichrysum": "Curry Plant",
-  "plantBlackPine": "Black Pine"
+  "plantBlackPine": "Black Pine",
+  "navCalendar": "Calendar",
+  "calendarTitle": "Watering Calendar",
+  "calendarWatered": "Watered",
+  "calendarDue": "Needs water",
+  "calendarUpcoming": "Scheduled",
+  "calendarNoEvents": "No watering events for this day.",
+  "calendarToday": "Today"
 }

@@ -318,9 +318,23 @@ class PlantListScreen extends ConsumerWidget {
           Expanded(
             child: plants.isEmpty
                 ? Center(
-                    child: Text(
-                      l10n.noPlantsFound,
-                      style: const TextStyle(color: Colors.grey),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.yard_outlined,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l10n.noPlantsFound,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : ListView.builder(

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/plant.dart';
+import '../services/botanical_lookup_service.dart';
 
 class AddPlantSheet extends StatefulWidget {
   final Plant? initialPlant;
@@ -26,6 +28,12 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
+  // State για το υβριδικό autocomplete επιστημονικής ονομασίας
+  List<String> _speciesSuggestions = [];
+  bool _isSearchingSpecies = false;
+  bool _ignoreSpeciesListener = false;
+  Timer? _debounceTimer;
+
   bool get _isEditing => widget.initialPlant != null;
 
   @override
@@ -42,10 +50,90 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
     if (p?.imageUrl != null && File(p!.imageUrl!).existsSync()) {
       _selectedImage = File(p.imageUrl!);
     }
+
+    _nameController.addListener(_onNameChanged);
+    _speciesController.addListener(_onSpeciesChanged);
+  }
+
+  void _onNameChanged() {
+    _debounceTimer?.cancel();
+    final query = _nameController.text.trim();
+
+    if (query.length < 3) {
+      if (_speciesSuggestions.isNotEmpty || _isSearchingSpecies) {
+        setState(() {
+          _speciesSuggestions = [];
+          _isSearchingSpecies = false;
+        });
+      }
+      return;
+    }
+
+    // Βήμα 1: Άμεσος τοπικός έλεγχος (Offline)
+    final localMatches = BotanicalLookupService.searchLocal(query);
+    if (localMatches.isNotEmpty) {
+      setState(() {
+        _speciesSuggestions = localMatches;
+        _isSearchingSpecies = false;
+      });
+      return;
+    }
+
+    // Βήμα 2: Online αναζήτηση μέσω GBIF / Wikipedia API με debounce 450ms
+    setState(() {
+      _isSearchingSpecies = true;
+    });
+
+    _debounceTimer = Timer(const Duration(milliseconds: 450), () async {
+      final onlineMatches = await BotanicalLookupService.searchOnline(query);
+      if (!mounted) return;
+      if (_nameController.text.trim() == query) {
+        setState(() {
+          _speciesSuggestions = onlineMatches;
+          _isSearchingSpecies = false;
+        });
+      }
+    });
+  }
+
+  void _onSpeciesChanged() {
+    if (_ignoreSpeciesListener) return;
+    if (mounted) setState(() {});
+
+    _debounceTimer?.cancel();
+    final query = _speciesController.text.trim();
+
+    if (query.length < 3) {
+      if (_speciesSuggestions.isNotEmpty || _isSearchingSpecies) {
+        setState(() {
+          _speciesSuggestions = [];
+          _isSearchingSpecies = false;
+        });
+      }
+      return;
+    }
+
+    setState(() {
+      _isSearchingSpecies = true;
+    });
+
+    _debounceTimer = Timer(const Duration(milliseconds: 350), () async {
+      final matches = await BotanicalLookupService.suggestScientificPrefix(
+        query,
+      );
+      if (!mounted) return;
+      if (_speciesController.text.trim() == query) {
+        setState(() {
+          _speciesSuggestions = matches;
+          _isSearchingSpecies = false;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _nameController.dispose();
     _speciesController.dispose();
     _intervalController.dispose();
@@ -121,6 +209,11 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
+    // Φιλτράρουμε ώστε να μην δείχνουμε πρόταση που έχει ήδη επιλεγεί
+    final visibleSuggestions = _speciesSuggestions
+        .where((s) => s != _speciesController.text.trim())
+        .toList();
+
     return Padding(
       padding: EdgeInsets.only(
         top: 24,
@@ -195,7 +288,7 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Κοινό Όνομα (π.χ. Μονστέρα)',
+                  labelText: 'Κοινό Όνομα (π.χ. Πόθος)',
                   prefixIcon: Icon(Icons.badge_outlined),
                   border: OutlineInputBorder(),
                 ),
@@ -209,12 +302,57 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _speciesController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Είδος / Βοτανικό όνομα',
-                  prefixIcon: Icon(Icons.local_florist_outlined),
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.local_florist_outlined),
+                  suffixIcon: _isSearchingSpecies
+                      ? const Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : null,
+                  border: const OutlineInputBorder(),
                 ),
               ),
+
+              // Προτεινόμενες επιστημονικές ονομασίες (Chips)
+              if (visibleSuggestions.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: visibleSuggestions.map((suggestion) {
+                    return ActionChip(
+                      avatar: Icon(
+                        Icons.auto_awesome,
+                        size: 15,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      label: Text(
+                        suggestion,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      onPressed: () {
+                        _ignoreSpeciesListener = true;
+                        setState(() {
+                          _speciesController.text = suggestion;
+                          _speciesSuggestions = [];
+                        });
+                        _ignoreSpeciesListener = false;
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+
               const SizedBox(height: 12),
               TextFormField(
                 controller: _intervalController,
@@ -237,7 +375,7 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Επιλογή Χώρου / Τοποθεσίας
+              // Επιλογή Χώρου / Τοποθεσίας (χωρίς checkmark)
               const Text(
                 'Τοποθεσία Φυτού',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -249,6 +387,7 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
                 children: PlantLocation.values.map((loc) {
                   final isSelected = _selectedLocation == loc;
                   return ChoiceChip(
+                    showCheckmark: false,
                     avatar: Icon(
                       loc.icon,
                       size: 16,
@@ -256,8 +395,13 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
                           ? Colors.white
                           : Theme.of(context).colorScheme.primary,
                     ),
-                    label: Text(loc.label),
+                    label: Text(loc.localizedLabel(context)),
                     selected: isSelected,
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : null,
+                      fontWeight: isSelected ? FontWeight.w600 : null,
+                    ),
                     onSelected: (selected) {
                       if (selected) {
                         setState(() {

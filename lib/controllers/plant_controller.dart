@@ -63,31 +63,7 @@ class PlantNotifier extends Notifier<List<Plant>> {
 
   Future<void> _loadInitial() async {
     final loaded = await _storageService.loadPlants();
-    if (loaded.isNotEmpty) {
-      state = loaded;
-    } else {
-      state = [
-        Plant(
-          id: '1',
-          name: 'Ελίχρυσος',
-          species: 'Helichrysum italicum',
-          wateringIntervalDays: 4,
-          lastWatered: DateTime.now().subtract(const Duration(days: 5)),
-        ),
-        Plant(
-          id: '2',
-          name: 'Μαύρη Πεύκη',
-          species: 'Pinus nigra',
-          wateringIntervalDays: 7,
-          lastWatered: DateTime.now().subtract(const Duration(days: 2)),
-        ),
-      ];
-      _storageService.savePlants(state);
-      // Προγραμματισμός αρχικών ειδοποιήσεων
-      for (final plant in state) {
-        _scheduleNotificationForPlant(plant);
-      }
-    }
+    state = loaded;
   }
 
   // Helper για μοναδικό int ID ειδοποίησης
@@ -95,8 +71,9 @@ class PlantNotifier extends Notifier<List<Plant>> {
 
   // Helper για προγραμματισμό ειδοποίησης στις 09:00 π.μ. την ημέρα λήξης
   void _scheduleNotificationForPlant(Plant plant) {
-    final nextWateringDate =
-    plant.lastWatered.add(Duration(days: plant.wateringIntervalDays));
+    final nextWateringDate = plant.lastWatered.add(
+      Duration(days: plant.wateringIntervalDays),
+    );
 
     final reminderDateTime = DateTime(
       nextWateringDate.year,
@@ -222,7 +199,7 @@ final filteredPlantsProvider = Provider<List<Plant>>((ref) {
       break;
     case PlantSort.nameAsc:
       result.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
       );
       break;
     case PlantSort.recentlyWatered:
@@ -248,7 +225,7 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
     final savedMode = prefs.getString(_themePrefKey);
     if (savedMode != null) {
       state = ThemeMode.values.firstWhere(
-            (m) => m.name == savedMode,
+        (m) => m.name == savedMode,
         orElse: () => ThemeMode.system,
       );
     }
@@ -306,5 +283,6 @@ class LocaleNotifier extends Notifier<Locale> {
   }
 }
 
-final localeProvider =
-NotifierProvider<LocaleNotifier, Locale>(LocaleNotifier.new);
+final localeProvider = NotifierProvider<LocaleNotifier, Locale>(
+  LocaleNotifier.new,
+);

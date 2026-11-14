@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @myPlants.
   ///
   /// In el, this message translates to:
-  /// **'Τα Φυτά μου'**
+  /// **'Φυτά'**
   String get myPlants;
 
   /// No description provided for @searchHint.

@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
   "appTitle": "Plant Tracker",
-  "myPlants": "My Plants",
+  "myPlants": "Plants",
   "searchHint": "Search by name or species...",
   "filterAll": "All",
   "filterThirsty": "Thirsty 💧",

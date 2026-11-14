@@ -13,7 +13,7 @@ class AppLocalizationsEl extends AppLocalizations {
   String get appTitle => 'Plant Tracker';
 
   @override
-  String get myPlants => 'Τα Φυτά μου';
+  String get myPlants => 'Φυτά';
 
   @override
   String get searchHint => 'Αναζήτηση με όνομα ή είδος...';

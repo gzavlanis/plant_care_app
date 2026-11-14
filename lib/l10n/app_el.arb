@@ -1,7 +1,7 @@
 {
   "@@locale": "el",
   "appTitle": "Plant Tracker",
-  "myPlants": "Τα Φυτά μου",
+  "myPlants": "Φυτά",
   "searchHint": "Αναζήτηση με όνομα ή είδος...",
   "filterAll": "Όλα",
   "filterThirsty": "Διψασμένα 💧",
